@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Short Video Study</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <main class="study-shell">
+      <header>
+        <p class="eyebrow">Video viewing study</p>
+        <h1 id="video-title">Loading video…</h1>
+      </header>
+
+      <section class="player-card" aria-live="polite">
+        <div id="player"></div>
+        <div id="question-overlay" class="overlay" hidden>
+          <div class="question-card">
+            <p class="eyebrow">Pause point</p>
+            <h2>If you could choose right now, would you continue watching or move to the next video?</h2>
+            <div class="choices">
+              <button type="button" data-choice="continue">Continue watching</button>
+              <button type="button" class="secondary" data-choice="next">Move to next video</button>
+            </div>
+          </div>
+        </div>
+        <div id="end-overlay" class="overlay" hidden>
+          <div class="question-card">
+            <h2>This video has ended.</h2>
+            <button id="next-button" type="button">Next video</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="complete-card" class="complete-card" hidden>
+        <p class="eyebrow">Complete</p>
+        <h1>Thanks for participating.</h1>
+        <p>Your responses have been recorded.</p>
+      </section>
+      <p id="status" class="status" role="status"></p>
+    </main>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="{{ url_for('static', filename='study.js') }}"></script>
+  </body>
+</html>

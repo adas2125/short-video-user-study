@@ -1,0 +1,64 @@
+{
+  "videos": [
+    {
+      "id": "carpet_restoration",
+      "title": "Fastest Carpet Cleaner - Flood Damaged Carpet Cleaning",
+      "youtube_id": "XyGuBJnn06g",
+      "probe_candidates": [
+        {"time": 12, "category": "development"},
+        {"time": 31, "category": "development"},
+        {"time": 41, "category": "buildup"}
+      ]
+    },
+    {
+      "id": "potato_triangles",
+      "title": "Crispy Potato Triangles",
+      "youtube_id": "mY9OlLIbjeg",
+      "probe_candidates": [
+        {"time": 10, "category": "development"},
+        {"time": 23, "category": "development"},
+        {"time": 29, "category": "buildup"}
+      ]
+    },
+    {
+      "id": "tissue_float",
+      "title": "Try To Guess How Many Tissue Papers It Takes To Float",
+      "youtube_id": "jWmyVcJmBBw",
+      "probe_candidates": [
+        {"time": 14, "category": "micro_payoff_loop"},
+        {"time": 37, "category": "micro_payoff_loop"},
+        {"time": 61, "category": "before_primary_payoff"}
+      ]
+    },
+    {
+      "id": "opinions",
+      "title": "Why Other People's Opinions Don't Matter",
+      "youtube_id": "gDBC7S2DL4g",
+      "probe_candidates": [
+        {"time": 11, "category": "development"},
+        {"time": 32, "category": "buildup"},
+        {"time": 40, "category": "primary_payoff"}
+      ]
+    },
+    {
+      "id": "bento",
+      "title": "Pack a Bento for My Daughter",
+      "youtube_id": "HSSpUwCDzE",
+      "probe_candidates": [
+        {"time": 9, "category": "micro_payoff_loop"},
+        {"time": 26, "category": "micro_payoff_loop"},
+        {"time": 42, "category": "before_primary_payoff"}
+      ]
+    },
+    {
+      "id": "viral_hacks",
+      "title": "Testing The Most Viral Life Hacks",
+      "youtube_id": "0RuOOov73mM",
+      "probe_candidates": [
+        {"time": 8, "category": "micro_payoff_loop"},
+        {"time": 28, "category": "micro_payoff_loop"},
+        {"time": 45, "category": "micro_payoff_loop"}
+      ]
+    }
+  ]
+}
