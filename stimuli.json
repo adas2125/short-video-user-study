@@ -41,16 +41,6 @@
       ]
     },
     {
-      "id": "bento",
-      "title": "Pack a Bento for My Daughter",
-      "youtube_id": "HSSpUwCDzE",
-      "probe_candidates": [
-        {"time": 9, "category": "micro_payoff_loop"},
-        {"time": 26, "category": "micro_payoff_loop"},
-        {"time": 42, "category": "before_primary_payoff"}
-      ]
-    },
-    {
       "id": "viral_hacks",
       "title": "Testing The Most Viral Life Hacks",
       "youtube_id": "0RuOOov73mM",
