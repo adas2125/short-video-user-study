@@ -17,6 +17,7 @@ let awaitingChoice = false;
 let endedWhileAwaitingChoice = false;
 // Only allow the end overlay after the participant chose Continue.
 let shouldShowEndOverlay = false;
+let advancingTrial = false;
 
 // specific html elements used in the study interface
 const title = document.querySelector("#video-title");
@@ -167,7 +168,7 @@ async function submitChoice(choice) {
 
     if (endedWhileAwaitingChoice) {
       // The video ended while the question was visible.
-      endOverlay.hidden = false;
+      await nextTrial();
     } else {
       shouldShowEndOverlay = true;
       player.playVideo();
@@ -178,16 +179,22 @@ async function submitChoice(choice) {
 }
 
 async function nextTrial() {
-  if (!trial) return;
+  if (!trial || advancingTrial) return;
 
-  // Tell Flask to mark the current trial as ended and increment the participant’s current position
-  await api("/api/trial/next", {
-    method: "POST",
-    body: JSON.stringify({ trial_id: trial.trial_id }),
-  });
+  advancingTrial = true;
 
-  // request and load the next trial from the server
-  await loadTrial();
+  try {
+    // Tell Flask to mark the current trial as ended and increment the participant’s current position
+    await api("/api/trial/next", {
+      method: "POST",
+      body: JSON.stringify({ trial_id: trial.trial_id }),
+    });
+
+    // request and load the next trial from the server
+    await loadTrial();
+  } finally {
+    advancingTrial = false;
+  }
 }
 
 window.onYouTubeIframeAPIReady = async function onYouTubeIframeAPIReady() {
@@ -216,7 +223,7 @@ window.onYouTubeIframeAPIReady = async function onYouTubeIframeAPIReady() {
           if (awaitingChoice) {
             endedWhileAwaitingChoice = true;
           } else if (shouldShowEndOverlay) {
-            endOverlay.hidden = false;
+            nextTrial();
           }
         }
       },
