@@ -1,0 +1,76 @@
+{
+  "videos": [
+    {
+      "id": "Alfredo_Chicken_Parmesan_Early_Payoff",
+      "title": "Alfredo_Chicken_Parmesan_Early_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Alfredo_Chicken_Parmesan_Early_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Chocolate_Cake_Late_Payoff",
+      "title": "Chocolate_Cake_Late_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Chocolate_Cake_Late_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Tiny_House_Early_Payoff",
+      "title": "Tiny_House_Early_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Tiny_House_Early_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Chocolate_Cake_Early_Payoff",
+      "title": "Chocolate_Cake_Early_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Chocolate_Cake_Early_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Tin_Foil_Experiment_Early_Payoff",
+      "title": "Tin_Foil_Experiment_Early_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Tin_Foil_Experiment_Early_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Tin_Foil_Experiment_Late_Payoff",
+      "title": "Tin_Foil_Experiment_Late_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Tin_Foil_Experiment_Late_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Super_Elytra_Early_Payoff",
+      "title": "Super_Elytra_Early_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Super_Elytra_Early_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Rug_Restoration_Early_Payoff",
+      "title": "Rug_Restoration_Early_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Rug_Restoration_Early_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Alfredo_Chicken_Parmesan_Late_Payoff",
+      "title": "Alfredo_Chicken_Parmesan_Late_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Alfredo_Chicken_Parmesan_Late_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Rug_Restoration_Late_Payoff",
+      "title": "Rug_Restoration_Late_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Rug_Restoration_Late_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Super_Elytra_Late_Payoff",
+      "title": "Super_Elytra_Late_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Super_Elytra_Late_Payoff.mp4",
+      "category": "RQ2"
+    },
+    {
+      "id": "Tiny_House_Late_Payoff",
+      "title": "Tiny_House_Late_Payoff",
+      "video_url": "https://pub-ac0b745d1d8e43f28f455b068d4b59a0.r2.dev/rq2_videos/Tiny_House_Late_Payoff.mp4",
+      "category": "RQ2"
+    }
+  ]
+}
