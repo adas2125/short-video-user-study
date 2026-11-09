@@ -62,14 +62,20 @@ function resetTrialInterface() {
   status.textContent = "Loading video…";
 }
 
-function isFreeSwipeTrial() {
-  return trial?.interaction_mode === "free_swipe";
+function isSwipeUnlocked() {
+  // allow swipes if free swipe or past the probe
+  return trial?.interaction_mode === "free_swipe" || (
+    trial?.interaction_mode === "fixed_probe" &&
+    trial.probes.length === 1 &&
+    trial.last_probe_choice === "continue" &&
+    nextProbeIndex === 1
+  );
 }
 
 function updateInteractionControls() {
   // Show or hide the free swipe controls based on the current trial and player state
   freeSwipeControls.hidden = (
-    !isFreeSwipeTrial() ||
+    !isSwipeUnlocked() ||
     !hasStartedStudy ||
     player.paused ||
     player.ended
@@ -99,6 +105,17 @@ async function loadTrial({ autoplay = false } = {}) {
   retryingVideo = false;
   title.textContent = payload.title;
   resetTrialInterface();
+
+  shouldAdvanceAfterVideoEnds = payload.last_probe_choice === "continue";
+
+  if (payload.last_probe_choice === "next") {
+    autoplayWhenReady = false;
+    player.pause();
+    startOverlay.hidden = true;
+    endOverlay.hidden = false;
+    status.textContent = "Press Next video to continue.";
+    return;
+  }
 
   // The first video needs a deliberate click because browsers block audio autoplay.
   // Later videos try to start automatically; a button appears only if the browser blocks it.
@@ -175,7 +192,7 @@ async function submitChoice(choice) {
 
   //send to the backend API to record the participant's response for the current probe
   try {
-    await api("/api/response", {
+    const savedResponse =await api("/api/response", {
       method: "POST",
       body: JSON.stringify({
         trial_id: trial.trial_id,
@@ -183,6 +200,8 @@ async function submitChoice(choice) {
         choice,
       }),
     });
+    choice = savedResponse.choice;
+    trial.last_probe_choice = choice;
   } catch (error) {
     setChoiceButtonsDisabled(false);
     status.textContent = "Your answer could not be saved. Please try again.";
@@ -224,7 +243,7 @@ async function submitChoice(choice) {
 
 function canVoluntarilySwipe() {
   return (
-    isFreeSwipeTrial() &&
+    isSwipeUnlocked() &&
     hasStartedStudy &&
     !player.paused &&
     !player.ended &&
@@ -277,6 +296,13 @@ async function nextTrial() {
   }
 }
 
+player.addEventListener("loadedmetadata", () => {
+  if (trial?.last_probe_choice !== "continue") return;
+
+  const answeredProbe = trial.probes[nextProbeIndex - 1];
+  if (answeredProbe) player.currentTime = answeredProbe.time;
+});
+
 // Event listener for when the video player can start playback
 player.addEventListener("canplay", () => {
   retryingVideo = false;
@@ -302,7 +328,7 @@ player.addEventListener("ended", () => {
   logEvent("video_ended");
 
   // typically advance to the next trial if the participant has completed the current one
-  if (isFreeSwipeTrial()) {
+  if (isSwipeUnlocked()) {
     nextTrial();
   } else if (awaitingChoice) {
     endedWhileAwaitingChoice = true;

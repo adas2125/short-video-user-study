@@ -13,17 +13,57 @@ from flask import Flask, Response, abort, jsonify, render_template, request, ses
 from psycopg import IntegrityError
 
 # Custom imports
-from feed import assign_feed, plan_probes, CLASS_LABELS, CLIPS_PER_LABEL
+from feed import assign_feed, plan_probes, select_rq2_versions, CLASS_LABELS, CLIPS_PER_LABEL
 from db import get_db, init_db, close_db
-
 
 BASE_DIR = Path(__file__).resolve().parent
 STIMULI_PATH = BASE_DIR / "stimuli_from_catalog.json"
+RQ2_STIMULI_PATH = BASE_DIR / "stimuli_from_rq2.json"
 
 app = Flask(__name__)
 # Set STUDY_SECRET_KEY in Render before deploying.
 app.config["SECRET_KEY"] = os.environ.get("STUDY_SECRET_KEY", "local-prototype-only-change-me")
 app.teardown_appcontext(close_db)
+
+def count_rq1_transitions(order):
+    """Count transitions between consecutive RQ1 video labels in the given order."""
+    # obtain labels associated w/ videos, e.g. ["L", "T", "L", ...]
+    labels = [
+        None if video.get("category") == "RQ2"
+        else CLASS_LABELS.get(video.get("payoff_label"))
+        for video in order
+    ]
+
+    # check if the number of labels matches the expected count per label (e.g. 6 for "L", 6 for "T", etc.)
+    if Counter(label for label in labels if label is not None) != CLIPS_PER_LABEL:
+        return Counter()
+
+    # return a counter of transitions between consecutive labels
+    return Counter(
+        (left, right)
+        for left, right in zip(labels, labels[1:])
+        if left is not None and right is not None
+    )
+
+
+def build_session_feed(rng):
+    catalog = load_stimuli()
+    with RQ2_STIMULI_PATH.open(encoding="utf-8") as stream:
+        rq2_stimuli = select_rq2_versions(json.load(stream)["videos"], rng)
+
+    stimuli = assign_feed(catalog, rng, rq2_stimuli=rq2_stimuli)
+
+    rq1_stimuli = [video for video in stimuli if video.get("category") != "RQ2"]
+    num_free_swipe = len(rq1_stimuli) // 2
+    num_fixed_probe = len(rq1_stimuli) - num_free_swipe
+    interaction_modes = ["free_swipe"] * num_free_swipe + ["fixed_probe"] * num_fixed_probe
+    rng.shuffle(interaction_modes)
+
+    # randomly assign interaction modes to RQ1 stimuli
+    for stimulus, interaction_mode in zip(rq1_stimuli, interaction_modes):
+        stimulus["interaction_mode"] = interaction_mode
+
+    return stimuli
 
 
 def utc_now() -> str:
@@ -42,28 +82,8 @@ def ensure_session() -> str:
 
     participant_id = secrets.token_urlsafe(16)
     rng = Random(secrets.randbits(64))
-    catalog = load_stimuli()
     db = get_db()
-    # Serialize new assignments so each one sees the previous committed feed.
-    db.execute("SELECT pg_advisory_xact_lock(%s, %s)", (78201, 1))
-    assigned_counts = Counter()
-    for row in db.execute("SELECT trial_order_json FROM sessions"):
-        prior_order = json.loads(row["trial_order_json"])
-        labels = [CLASS_LABELS.get(video.get("payoff_label")) for video in prior_order]
-        if Counter(labels) == CLIPS_PER_LABEL:
-            assigned_counts.update(zip(labels, labels[1:]))
-    stimuli = assign_feed(catalog, assigned_counts, rng)
-
-    # Give half the selected clips the natural, no-pause interaction condition.
-    free_swipe_frac = 0.5
-    num_free_swipe = round(len(stimuli) * free_swipe_frac)
-    num_fixed_probe = len(stimuli) - num_free_swipe
-    interaction_modes = ["free_swipe"] * num_free_swipe
-    interaction_modes += ["fixed_probe"] * num_fixed_probe
-    rng.shuffle(interaction_modes)
-    # assign an interaction mode to each stimulus in stimuli
-    for stimulus, interaction_mode in zip(stimuli, interaction_modes):
-        stimulus["interaction_mode"] = interaction_mode
+    stimuli = build_session_feed(rng)
 
     # adding to manage participant session and trial order
     db.execute(
@@ -159,9 +179,11 @@ def get_current_trial():
     # read the next probe index for the current trial from the responses table
     row = get_db().execute(
         """
-        SELECT COALESCE(MAX(probe_index), -1) + 1 AS next_probe_index
+        SELECT probe_index, choice
         FROM responses
         WHERE trial_id = %s
+        ORDER BY probe_index DESC
+        LIMIT 1
         """,
         (trial["id"],),
     ).fetchone()
@@ -174,7 +196,8 @@ def get_current_trial():
             "video_url": trial["video_url"],
             "interaction_mode": trial["interaction_mode"],
             "probes": probes,
-            "next_probe_index": row["next_probe_index"],
+            "next_probe_index": row["probe_index"] + 1 if row else 0,
+            "last_probe_choice": row["choice"] if row else None,
         }
     )
 
@@ -252,13 +275,17 @@ def save_response():
                 utc_now(),
             ),
         )
+        saved = db.execute(
+            "SELECT choice FROM responses WHERE trial_id = %s AND probe_index = %s",
+            (trial["id"], probe_index),
+        ).fetchone()
         db.commit()
     except IntegrityError:
         db.rollback()
         app.logger.exception("Could not save probe response")
         return jsonify({"error": "Could not save probe response"}), 500
 
-    return jsonify({"ok": True})
+    return jsonify({"ok": True, "choice": saved["choice"]})
 
 @app.post("/api/trial/next")
 def advance_trial():
@@ -296,6 +323,8 @@ def admin_summary():
         SELECT
             t.session_id,
             t.id AS trial_id,
+            t.video_id,
+            t.position,
             t.video_title,
             r.probe_index,
             r.planned_probe_time,
@@ -314,6 +343,8 @@ def admin_summary():
         SELECT
             t.session_id,
             t.id AS trial_id,
+            t.video_id,
+            t.position,
             t.video_title,
             t.interaction_mode,
             e.video_time AS swipe_time_seconds,
@@ -337,15 +368,22 @@ def admin_summary():
         """
     ).fetchall()
 
+    video_orders = {
+        row["session_id"]: json.loads(row["trial_order_json"])
+        for row in session_rows
+    }
+
+    def is_rq2_trial(row):
+        stimulus = video_orders[row["session_id"]][row["position"]]
+        return stimulus.get("category") == "RQ2"
+
     return jsonify({
-        "responses": response_rows,
-        "voluntary_swipes": voluntary_swipes,
+        "responses": [row for row in response_rows if not is_rq2_trial(row)],
+        "voluntary_swipes": [row for row in voluntary_swipes if not is_rq2_trial(row)],
+        "rq2_voluntary_swipes": [row for row in voluntary_swipes if is_rq2_trial(row)],
         "sessions": [
-            {
-                "session_id": row["session_id"],
-                "video_order": json.loads(row["trial_order_json"]),
-            }
-            for row in session_rows
+            {"session_id": session_id, "video_order": order}
+            for session_id, order in video_orders.items()
         ],
     })
 
